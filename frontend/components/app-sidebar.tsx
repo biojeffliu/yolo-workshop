@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { ChevronRight, Database, Home, Play } from "lucide-react"
+import { ChevronRight, Database, Folders, Home, Play } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useFetchFolders } from "@/hooks/use-backend"
 
 import {
   Sidebar,
@@ -29,6 +30,7 @@ export function AppSidebar() {
   const pathname = usePathname()
   const [isVideoPlayerOpen, setIsVideoPlayerOpen] = React.useState(false)
 
+  const { folders, folderNames, isLoading, error } = useFetchFolders()
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -73,22 +75,49 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {/* {mockDatasets.length > 0 ? (
-                        mockDatasets.map((dataset) => (
-                          <SidebarMenuSubItem key={dataset.id}>
-                            <SidebarMenuSubButton asChild isActive={pathname === `/video-player/${dataset.id}`}>
-                              <Link href={`/video-player/${dataset.id}`}>{dataset.name}</Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))
-                      ) : (
-                        <SidebarMenuSubItem>
-                          <div className="px-2 py-1.5 text-sm text-muted-foreground">No datasets uploaded</div>
+                  <SidebarMenuSub>
+
+                    {isLoading && (
+                      <SidebarMenuSubItem>
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                          Loading folders...
+                        </div>
+                      </SidebarMenuSubItem>
+                    )}
+
+                    {error && (
+                      <SidebarMenuSubItem>
+                        <div className="px-2 py-1.5 text-sm text-red-500">
+                          Failed to load folders
+                        </div>
+                      </SidebarMenuSubItem>
+                    )}
+
+                    {!isLoading && !error && folders.length > 0 ? (
+                      folders.map((folder) => (
+                        <SidebarMenuSubItem key={folder.name}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={pathname === `/player/${folder.name}`}
+                          >
+                            <Link href={`/player/${folder.name}`}>
+                              {folder.name}
+                            </Link>
+                          </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
-                      )} */}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
+                      ))
+                    ) : null}
+
+                    {!isLoading && !error && folders.length === 0 && (
+                      <SidebarMenuSubItem>
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                          No folders found
+                        </div>
+                      </SidebarMenuSubItem>
+                    )}
+
+                  </SidebarMenuSub>
+                </CollapsibleContent>
                 </SidebarMenuItem>
               </Collapsible>
             </SidebarMenu>

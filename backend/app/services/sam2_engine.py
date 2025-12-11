@@ -6,9 +6,9 @@ class SAM2Engine:
     _instance = None
     _lock = threading.Lock()
 
-    def __init__(self, sam2_checkpoint: str, model_cfg: str):
-        self.sam2_checkpoint = sam2_checkpoint
+    def __init__(self, model_cfg: str, checkpoint_path: str):
         self.model_cfg = model_cfg
+        self.checkpoint_path = checkpoint_path
         self.device = self._get_device()
         self.predictor = None
         self.loaded = False
@@ -39,7 +39,7 @@ class SAM2Engine:
 
     def load_video(self, folder_path: str):
         self.load()
-        return self.predictor.load_video(folder_path)
+        return self.predictor.init_state(video_path=folder_path)
 
     @classmethod
     def get_instance(cls):

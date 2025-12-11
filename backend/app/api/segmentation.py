@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
-from app.models.segmentation import SegmentRequest,PropagateRequest, ResetMaskRequest, ResetMasksFolderRequest, CreateObjRequest, DeleteObjRequest, GetFrameRequest
+from app.models.segmentation import LoadModelRequest, SegmentRequest,PropagateRequest, ResetMaskRequest, ResetMasksFolderRequest, CreateObjRequest, DeleteObjRequest, GetFrameRequest
 from app.services.sam2_engine import SAM2Engine
 from app.services.mask_store import MASK_STORE
 from app.utils.cocos import COCO_LABELS
@@ -25,8 +25,8 @@ MASK_COLORS = [
 ]
 
 @router.post("/load-model")
-async def load_model(folder: str):
-    folder_path = safe_folder_path(folder)
+async def load_model(req: LoadModelRequest):
+    folder_path = safe_folder_path(req.folder)
 
     if not folder_path.exists():
         raise HTTPException(404, detail="Folder not found")
@@ -37,7 +37,7 @@ async def load_model(folder: str):
 
     return {
         "status": "model_loaded",
-        "folder": folder,
+        "folder": req.folder,
         "frames": len(list(folder_path.iterdir()))
     }
 

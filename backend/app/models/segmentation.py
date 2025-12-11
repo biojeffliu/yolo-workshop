@@ -1,5 +1,8 @@
 from pydantic import BaseModel
 
+class LoadModelRequest(BaseModel):
+    folder: str
+
 class CreateObjRequest(BaseModel):
     folder: str
     obj_id: int

@@ -219,3 +219,11 @@ next-env.d.ts
 .vscode
 
 backend/app/uploads/**
+
+# Model files
+backend/checkpoints/**
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.engine
