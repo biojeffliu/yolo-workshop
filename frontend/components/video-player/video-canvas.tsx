@@ -111,20 +111,26 @@ export function VideoCanvas({
       const mask = masks[obj.id]
       if (!mask) return
 
+      // --- OFFSCREEN LAYER ---
+      const overlay = document.createElement("canvas")
+      overlay.width = canvas.width
+      overlay.height = canvas.height
+
+      const octx = overlay.getContext("2d")!
+      octx.clearRect(0, 0, overlay.width, overlay.height)
+
+      // 1. draw mask alpha
+      octx.drawImage(mask, 0, 0, overlay.width, overlay.height)
+
+      // 2. colorize masked pixels ONLY
+      octx.globalCompositeOperation = "source-in"
+      octx.fillStyle = getClassColor(obj.className)
+      octx.fillRect(0, 0, overlay.width, overlay.height)
+
+      // --- COMPOSITE ON TOP ---
       ctx.save()
-
       ctx.globalAlpha = 0.4
-      console.log(
-        "image:", image.width, image.height,
-        "mask:", mask.width, mask.height
-      )
-      ctx.fillStyle = getClassColor(obj.className)
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-      ctx.globalCompositeOperation = "destination-in"
-      ctx.drawImage(mask, 0, 0, canvas.width, canvas.height)
-
-      ctx.globalCompositeOperation = "source-over"
+      ctx.drawImage(overlay, 0, 0)
       ctx.restore()
     })
 

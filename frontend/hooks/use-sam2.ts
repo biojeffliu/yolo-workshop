@@ -109,5 +109,4 @@ export function useSegmentationClick() {
     }
   }, [])
   return { sendClick, isLoading, error }
-
 }

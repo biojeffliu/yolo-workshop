@@ -206,8 +206,13 @@ def debug_mask_store():
     }
 
 def encode_mask_png(mask: np.ndarray) -> str:
-    png = (mask * 255).astype(np.uint8)
-    success, buffer = cv2.imencode(".png", png)
+    h, w = mask.shape
+    rgba = np.zeros((h, w, 4), dtype=np.uint8)
+    rgba[..., 3] = mask * 255
+    
+
+    success, buffer = cv2.imencode(".png", rgba)
     if not success:
         raise RuntimeError("Mask encode failure")
+
     return base64.b64encode(buffer).decode("utf-8")
