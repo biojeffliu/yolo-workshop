@@ -131,28 +131,10 @@ async def propagate_masks(req: PropagateRequest):
 
     engine.predictor.reset_state(state)
 
-    overlayed_images = []
-
-    for frame_idx, frame_path in enumerate(frame_files):
-        image = cv2.imread(str(frame_path))
-        if image is None:
-            continue
-
-        masks = MASK_STORE.get_masks(req.folder, frame_idx)
-
-        overlay = make_overlay(image, masks)
-        success, buffer = cv2.imencode(".jpg", overlay)
-        if not success:
-            continue
-        
-        img_b64 = base64.b64encode(buffer).decode("utf-8")
-        overlayed_images.append(img_b64)
-
     return {
         "status": "success",
         "folder": req.folder,
-        "frames_updated": len(overlayed_images),
-        "images": overlayed_images
+        "frames_updated": len(frame_files),
     }
 
 # May not use
@@ -185,13 +167,13 @@ async def get_frame(req: GetFrameRequest):
     return StreamingResponse(io.BytesIO(buffer.tobytes()), media_type="image/jpeg")
 
 @router.get("/masks")
-async def get_masks(req: GetMasksRequest):
-    folder_path = safe_folder_path(req.folder)
+async def get_masks(folder: str, frame_idx: int):
+    folder_path = safe_folder_path(folder)
 
-    masks = MASK_STORE.get_masks(req.folder, req.frame_idx)
+    masks = MASK_STORE.get_masks(folder, frame_idx)
     if not masks:
             return {
-            "frame_index": req.frame_idx,
+            "frame_index": frame_idx,
             "masks": [],
         }
 
@@ -203,7 +185,7 @@ async def get_masks(req: GetMasksRequest):
         })
 
     return {
-        "frame_index": req.frame_idx,
+        "frame_index": frame_idx,
         "masks": encoded,
     }
 
@@ -233,7 +215,6 @@ def encode_mask_png(mask: np.ndarray) -> str:
     h, w = mask.shape
     rgba = np.zeros((h, w, 4), dtype=np.uint8)
     rgba[..., 3] = mask * 255
-
 
     success, buffer = cv2.imencode(".png", rgba)
     if not success:

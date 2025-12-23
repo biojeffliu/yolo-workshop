@@ -10,7 +10,7 @@ import { PlaybackControls } from "@/components/video-player/playback-controls"
 import { ObjectsPanel } from "@/components/video-player/objects-panel"
 import { ClickModeSelector } from "@/components/video-player/click-mode-selector"
 import { useFetchFolders, useFetchImages, FolderMetadata } from "@/hooks/use-backend"
-import { useLoadSam2, useSegmentationClick } from "@/hooks/use-sam2"
+import { useLoadSam2, usePropagateMasks, useFetchFrameMasks, useSegmentationClick } from "@/hooks/use-sam2"
 
 
 interface Click {
@@ -61,8 +61,10 @@ export default function VideoPlayerPage({ params }: { params: Promise<{ dataset:
   const { loadSam2, isLoading: isSam2Loading, error: sam2Error, modelState } = useLoadSam2()
 
   const isSam2Loaded = Boolean(modelState)
-
   const { images, isLoading: imagesLoading, error: imagesError, refetch } = useFetchImages(selectedDataset)
+
+  const { fetchFrameMasks } = useFetchFrameMasks()
+
   const totalFrames = images.length
   const currentFolderMetadata = folderMap[selectedDataset]
 
@@ -81,6 +83,29 @@ export default function VideoPlayerPage({ params }: { params: Promise<{ dataset:
 
     return () => clearInterval(interval)
   }, [isPlaying, fps, totalFrames])
+
+
+  React.useEffect(() => {
+    if (!selectedDataset) return
+
+    let cancelled = false
+
+    async function loadMasks() {
+      const res = await fetchFrameMasks(selectedDataset, currentFrame)
+      if (!res || cancelled) return
+
+      setMasks(prev => ({
+        ...prev,
+        [currentFrame]: res,
+      }))
+    }
+
+    loadMasks()
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedDataset, currentFrame])
 
   // Handle canvas click
   const { sendClick, isLoading: isSegLoading, error: segError } = useSegmentationClick()
@@ -169,10 +194,15 @@ export default function VideoPlayerPage({ params }: { params: Promise<{ dataset:
     setObjects((prev) => prev.map((obj) => (obj.id === id ? { ...obj, visible: !obj.visible } : obj)))
   }
 
-  // Propagate masks
-  const handlePropagateMasks = () => {
-    // TODO: Call backend endpoint to propagate masks
-    console.log("Propagating masks...")
+  const { propagateMasks, isLoading: isPropagating } = usePropagateMasks()
+
+  const handlePropagateMasks = async () => {
+    if (!selectedDataset) return
+
+    const res = await propagateMasks(selectedDataset, totalFrames)
+    if (!res) return
+
+    setMasks({})
   }
 
   // Save labels
@@ -220,9 +250,19 @@ export default function VideoPlayerPage({ params }: { params: Promise<{ dataset:
             )}
             {isSam2Loading ? "Loading..." : isSam2Loaded ? "SAM2 Loaded" : "Load SAM2 Model"}
           </Button>
-          <Button variant="outline" onClick={handlePropagateMasks}>
-            <Wand2 className="h-4 w-4 mr-2" />
-            Propagate Masks
+          <Button
+            variant="outline"
+            onClick={handlePropagateMasks}
+            disabled={isPropagating}
+          >
+            {isPropagating ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Wand2 className="h-4 w-4 mr-2" />
+            )}
+            {isPropagating ? "Propagating Masks..." : "Propagate Masks"}
+            {/* <Wand2 className="h-4 w-4 mr-2" />
+            Propagate Masks */}
           </Button>
           <Button onClick={handleSave}>
             <Save className="h-4 w-4 mr-2" />

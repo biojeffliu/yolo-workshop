@@ -166,3 +166,46 @@ export function useFetchFrameMasks() {
 
   return { fetchFrameMasks, isLoading, error }
 }
+
+export function usePropagateMasks() {
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+
+  const propagateMasks = React.useCallback(
+    async (
+      folder: string,
+      totalFrames: number
+    ) => {
+      setIsLoading(true)
+      setError(null)
+
+      try {
+        const res = await fetch(
+          `${BACKEND_URL}/api/segmentation/propagate-masks`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              folder,
+              total_frames: totalFrames,
+            }),
+          }
+        )
+      if (!res.ok) {
+        throw new Error(`Propagation failed (${res.status})`)
+      }
+
+      const data = await res.json()
+      return data
+      } catch (e) {
+        console.error("Propagation failed:", e)
+        setError("Failed to propagate masks")
+        return null
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    []
+  )
+  return { propagateMasks, isLoading, error }
+}
