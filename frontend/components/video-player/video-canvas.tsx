@@ -24,7 +24,8 @@ interface VideoCanvasProps {
   currentFrame: number
   clicks: Click[]
   objects: SegmentObject[]
-  masks: Record<number, ImageBitmap>
+  getMasksForFrame: (frameIdx: number) => Record<number, ImageBitmap> | null
+  maskVersion: number
   onCanvasClick: (normalizedX: number, normalizedY: number) => void
 }
 
@@ -33,7 +34,8 @@ export function VideoCanvas({
   currentFrame,
   clicks,
   objects,
-  masks,
+  getMasksForFrame,
+  maskVersion,
   onCanvasClick,
 }: VideoCanvasProps) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
@@ -107,8 +109,11 @@ export function VideoCanvas({
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.drawImage(image, 0, 0)
 
+    const frameMasks = getMasksForFrame(currentFrame)
+    if (!frameMasks) return
+
     objects.forEach(obj => {
-      const mask = masks[obj.id]
+      const mask = frameMasks[obj.id]
       if (!mask) return
 
       // --- OFFSCREEN LAYER ---
@@ -134,7 +139,7 @@ export function VideoCanvas({
       ctx.restore()
     })
 
-  }, [currentFrame, images, objects, masks, getImage, imageDimensions])
+  }, [currentFrame, images, objects, getImage, getMasksForFrame, maskVersion])
 
   const renderStars = () => {
     if (!imageDimensions || !containerRef.current) return null

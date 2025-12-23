@@ -50,6 +50,16 @@ export default function VideoPlayerPage({ params }: { params: Promise<{ dataset:
   const [isPlaying, setIsPlaying] = React.useState(false)
   const [fps, setFps] = React.useState(24)
 
+  const maskCacheRef = React.useRef<
+    Map<number, Record<number, ImageBitmap>>
+  >(new Map())
+
+  const [maskVersion, setMaskVersion] = React.useState(0)
+
+  const getMasksForFrame = React.useCallback((frameIdx: number) => {
+    return maskCacheRef.current.get(frameIdx) ?? null
+  }, [])
+
   // Objects and clicks state
   const [objects, setObjects] = React.useState<SegmentObject[]>([])
   const [selectedObjectId, setSelectedObjectId] = React.useState<number | null>(null)
@@ -88,24 +98,22 @@ export default function VideoPlayerPage({ params }: { params: Promise<{ dataset:
   React.useEffect(() => {
     if (!selectedDataset) return
 
-    let cancelled = false
+    // prefetch current + a bit ahead
+    const start = currentFrame
+    const end = Math.min(totalFrames - 1, currentFrame + 24)
 
-    async function loadMasks() {
-      const res = await fetchFrameMasks(selectedDataset, currentFrame)
-      if (!res || cancelled) return
+    ;(async () => {
+      for (let f = start; f <= end; f++) {
+        if (maskCacheRef.current.has(f)) continue
 
-      setMasks(prev => ({
-        ...prev,
-        [currentFrame]: res,
-      }))
-    }
+        const masks = await fetchFrameMasks(selectedDataset, f)
+        if (!masks) continue
 
-    loadMasks()
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedDataset, currentFrame])
+        maskCacheRef.current.set(f, masks)
+        setMaskVersion(v => v + 1)
+      }
+    })()
+  }, [currentFrame, selectedDataset, totalFrames, fetchFrameMasks])
 
   // Handle canvas click
   const { sendClick, isLoading: isSegLoading, error: segError } = useSegmentationClick()
@@ -127,34 +135,34 @@ export default function VideoPlayerPage({ params }: { params: Promise<{ dataset:
 
       if (!res) return
 
+      const frameIdx = res.frame_index
+      const frameMasks = maskCacheRef.current.get(frameIdx) ?? {}
+
       for (const obj of res.updated_masks) {
-        const bitmap = await decodeMask(obj.mask_png)
-
-        setMasks(prev => ({
-          ...prev,
-          [res.frame_index]: {
-            ...(prev[res.frame_index] ?? {}),
-            [obj.object_id]:bitmap,
-          },
-        }))
+        frameMasks[obj.object_id] = await decodeMask(obj.mask_png)
       }
 
-      // Update local click markers
-      const newClick: Click = {
-        normalizedX,
-        normalizedY,
-        type: clickMode,
-        objectId: selectedObjectId,
-        frame: currentFrame,
-      }
+      maskCacheRef.current.set(frameIdx, frameMasks)
 
-      setClicks((prev) => [...prev, newClick])
+      setMaskVersion(v => v + 1)
 
-      // Update object label count
-      setObjects((prev) =>
-        prev.map((obj) =>
-          obj.id === selectedObjectId ? { ...obj, labelCount: obj.labelCount + 1 } : obj,
-        ),
+      setClicks(prev => [
+        ...prev,
+        {
+          normalizedX,
+          normalizedY,
+          type: clickMode,
+          objectId: selectedObjectId,
+          frame: currentFrame,
+        },
+      ])
+
+      setObjects(prev =>
+        prev.map(obj =>
+          obj.id === selectedObjectId 
+            ? { ...obj, labelCount: obj.labelCount + 1 }
+            : obj
+        )
       )
     },
     [
@@ -166,6 +174,7 @@ export default function VideoPlayerPage({ params }: { params: Promise<{ dataset:
       sendClick,
     ]
   )
+
   const handleCreateObject = (name: string, className: string) => {
     setObjects((prev) => {
       const newObject: SegmentObject = {
@@ -280,7 +289,8 @@ export default function VideoPlayerPage({ params }: { params: Promise<{ dataset:
             currentFrame={currentFrame}
             clicks={visibleClicks}
             objects={visibleObjects}
-            masks={masks[currentFrame] ?? {}}
+            getMasksForFrame={getMasksForFrame}
+            maskVersion={maskVersion}
             onCanvasClick={handleCanvasClick}
           />
           <Card>
