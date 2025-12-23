@@ -29,9 +29,12 @@ class GetFrameRequest(BaseModel):
     frame_idx: int
     show_class: bool
 
+class GetMasksRequest(BaseModel):
+    fodler: str
+    frame_idx: int
+
 class ResetMaskRequest(BaseModel):
     folder: str
     frame_idx: int
-
 class ResetMasksFolderRequest(BaseModel):
     folder: str

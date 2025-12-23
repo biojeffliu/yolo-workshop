@@ -3,7 +3,6 @@
 import * as React from "react"
 import { BACKEND_URL } from "@/lib/api"
 import { toast } from "sonner"
-import { Parkinsans } from "next/font/google"
 
 interface SegmentClickParams {
   folder: string
@@ -19,9 +18,17 @@ interface MaskUpdate {
   maskPng: string
 }
 
-interface SegmentationResponse {
+interface ClickMaskResponse {
   frame_index: number
   updated_masks: {
+    object_id: number
+    mask_png: string
+  }[]
+}
+
+interface FrameMasksResponse {
+  frame_index: number
+  masks: {
     object_id: number
     mask_png: string
   }[]
@@ -77,7 +84,7 @@ export function useSegmentationClick() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
-  const sendClick = React.useCallback(async (params: SegmentClickParams): Promise<SegmentationResponse | null> => {
+  const sendClick = React.useCallback(async (params: SegmentClickParams): Promise<ClickMaskResponse | null> => {
     setIsLoading(true)
     setError(null)
 
@@ -97,7 +104,7 @@ export function useSegmentationClick() {
 
       if (!res.ok) throw new Error(`Server returned ${res.status}`)
       
-      const data: SegmentationResponse = await res.json()
+      const data: ClickMaskResponse = await res.json()
       return data
     } catch (err) {
       console.error("Segmentation click failed:", err)
@@ -109,4 +116,53 @@ export function useSegmentationClick() {
     }
   }, [])
   return { sendClick, isLoading, error }
+}
+
+async function decodeMask(maskBase64: string): Promise<ImageBitmap> {
+  const blob = await fetch(`data:image/png;base64,${maskBase64}`).then(r => r.blob())
+  return await createImageBitmap(blob)
+}
+
+export function useFetchFrameMasks() {
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+
+  const fetchFrameMasks = React.useCallback(
+    async (
+      folder: string,
+      frameIdx: number
+    ): Promise<Record<number, ImageBitmap> | null> => {
+      setIsLoading(true)
+      setError(null)
+
+      try {
+        const res = await fetch(
+          `${BACKEND_URL}/api/segmentation/masks?folder=${folder}&frame_idx=${frameIdx}`
+        )
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch masks (${res.status})`)
+        }
+
+        const data: FrameMasksResponse = await res.json()
+
+        const decoded: Record<number, ImageBitmap> = {}
+
+        for (const m of data.masks) {
+          decoded[m.object_id] = await decodeMask(m.mask_png)
+        }
+
+        return decoded
+      } catch (e) {
+        console.error("Mask fetch failed:", e)
+        setError("Failed to load masks")
+        return null
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    []
+  )
+
+  return { fetchFrameMasks, isLoading, error }
 }

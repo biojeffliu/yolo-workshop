@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
-from app.models.segmentation import LoadModelRequest, SegmentRequest,PropagateRequest, ResetMaskRequest, ResetMasksFolderRequest, CreateObjRequest, DeleteObjRequest, GetFrameRequest
+from app.models.segmentation import *
 from app.services.sam2_engine import SAM2Engine
 from app.services.mask_store import MASK_STORE
 from app.utils.cocos import COCO_LABELS
@@ -155,6 +155,7 @@ async def propagate_masks(req: PropagateRequest):
         "images": overlayed_images
     }
 
+# May not use
 @router.get("/frame")
 async def get_frame(req: GetFrameRequest):
     folder_path = safe_folder_path(req.folder)
@@ -183,6 +184,29 @@ async def get_frame(req: GetFrameRequest):
 
     return StreamingResponse(io.BytesIO(buffer.tobytes()), media_type="image/jpeg")
 
+@router.get("/masks")
+async def get_masks(req: GetMasksRequest):
+    folder_path = safe_folder_path(req.folder)
+
+    masks = MASK_STORE.get_masks(req.folder, req.frame_idx)
+    if not masks:
+            return {
+            "frame_index": req.frame_idx,
+            "masks": [],
+        }
+
+    encoded = []
+    for obj_id, mask in masks.items():
+        encoded.append({
+            "object_id": obj_id,
+            "mask_png": encode_mask_png(mask),
+        })
+
+    return {
+        "frame_index": req.frame_idx,
+        "masks": encoded,
+    }
+
 
 @router.post("/reset-mask")
 async def reset_masks(req: ResetMaskRequest):
@@ -209,7 +233,7 @@ def encode_mask_png(mask: np.ndarray) -> str:
     h, w = mask.shape
     rgba = np.zeros((h, w, 4), dtype=np.uint8)
     rgba[..., 3] = mask * 255
-    
+
 
     success, buffer = cv2.imencode(".png", rgba)
     if not success:
