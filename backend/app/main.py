@@ -13,14 +13,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-static_app = CORSMiddleware(
-    StaticFiles(directory=str(UPLOADS_DIR)),
-    allow_origins=["http://localhost:3000", "*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+class CORSStaticFiles(StaticFiles):
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        return response
 
-app.mount("/static", static_app, name="static")
+app.mount("/static", CORSStaticFiles(directory="static"), name="static")
 
 app.include_router(images.router, prefix="/api")
 app.include_router(folders.router, prefix="/api")
