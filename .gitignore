@@ -219,6 +219,7 @@ next-env.d.ts
 .vscode
 
 backend/app/uploads/**
+backend/app/segmentations/**
 
 # Model files
 backend/checkpoints/**

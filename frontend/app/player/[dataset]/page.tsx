@@ -9,9 +9,10 @@ import { VideoCanvas } from "@/components/video-player/video-canvas"
 import { PlaybackControls } from "@/components/video-player/playback-controls"
 import { ObjectsPanel } from "@/components/video-player/objects-panel"
 import { ClickModeSelector } from "@/components/video-player/click-mode-selector"
+import { SaveProgressDialog } from "@/components/video-player/save-progress-dialog"
 import { useFetchFolders, useFetchImages, FolderMetadata } from "@/hooks/use-backend"
 import { useLoadSam2, usePropagateMasks, useFetchFrameMasks, useSegmentationClick } from "@/hooks/use-sam2"
-
+import { useSaveSegmentationsYOLO } from "@/hooks/use-save-options"
 
 interface Click {
   normalizedX: number
@@ -35,13 +36,8 @@ async function decodeMask(maskBase64: string): Promise<ImageBitmap> {
 }
 
 export default function VideoPlayerPage({ params }: { params: Promise<{ dataset: string }> }) {
-  type MaskStore = {
-    [frameIndex: number]: {
-      [objectId: number]: ImageBitmap
-    }
-  }
   const resolvedParams = React.use(params)
-  const { folders, folderMap, folderNames, isLoading: foldersLoading, error: foldersError } = useFetchFolders()
+  const { folders, folderMap } = useFetchFolders()
   
 
   // Dataset and frame state
@@ -66,12 +62,22 @@ export default function VideoPlayerPage({ params }: { params: Promise<{ dataset:
   const [nextObjectId, setNextObjectId] = React.useState(0)
   const [clickMode, setClickMode] = React.useState<"positive" | "negative">("positive")
   const [clicks, setClicks] = React.useState<Click[]>([])
-  const [masks, setMasks] = React.useState<MaskStore>({})
 
-  const { loadSam2, isLoading: isSam2Loading, error: sam2Error, modelState } = useLoadSam2()
+  // Saving 
+  const [saveJobId, setSaveJobId] = React.useState<string | null>(null)
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = React.useState(false)
+
+  const {
+    startExport: saveSegmentationsYOLOStartExport,
+    progress: saveSegmentationsYOLOProgress,
+    status: saveSegmentationsYOLOStatus,
+    error: saveSegmentationsYOLOError,
+    reset: saveSegmentationsYOLOReset } = useSaveSegmentationsYOLO()
+
+  const { loadSam2, isLoading: isSam2Loading, modelState } = useLoadSam2()
 
   const isSam2Loaded = Boolean(modelState)
-  const { images, isLoading: imagesLoading, error: imagesError, refetch } = useFetchImages(selectedDataset)
+  const { images } = useFetchImages(selectedDataset)
 
   const { fetchFrameMasks } = useFetchFrameMasks()
 
@@ -141,7 +147,7 @@ export default function VideoPlayerPage({ params }: { params: Promise<{ dataset:
   }, [selectedDataset])
 
   // Handle canvas click
-  const { sendClick, isLoading: isSegLoading, error: segError } = useSegmentationClick()
+  const { sendClick } = useSegmentationClick()
   const handleCanvasClick = React.useCallback(
     async (normalizedX: number, normalizedY: number) => {
       if (selectedObjectId === null || !isSam2Loaded || !currentFolderMetadata) return
@@ -237,13 +243,18 @@ export default function VideoPlayerPage({ params }: { params: Promise<{ dataset:
     const res = await propagateMasks(selectedDataset, totalFrames)
     if (!res) return
 
-    setMasks({})
+    maskCacheRef.current.clear()
+    setMaskVersion((v) => v + 1)
   }
 
   // Save labels
   const handleSave = () => {
-    // TODO: Call backend endpoint to save labels
-    console.log("Saving labels...", { objects, clicks })
+    if (!selectedDataset) return
+    saveSegmentationsYOLOStartExport({
+      folder: selectedDataset,
+      minArea: 10,
+      simplify: true
+    })
   }
 
   // Filter clicks for current frame and visible objects
@@ -299,9 +310,9 @@ export default function VideoPlayerPage({ params }: { params: Promise<{ dataset:
             {/* <Wand2 className="h-4 w-4 mr-2" />
             Propagate Masks */}
           </Button>
-          <Button onClick={handleSave}>
+          <Button onClick={handleSave} disabled={saveSegmentationsYOLOStatus === "running"}>
             <Save className="h-4 w-4 mr-2" />
-            Save
+            {saveSegmentationsYOLOStatus === "running" ? "Saving..." : "Save"}
           </Button>
         </div>
       </div>
@@ -347,6 +358,14 @@ export default function VideoPlayerPage({ params }: { params: Promise<{ dataset:
           />
         </div>
       </div>
+      <SaveProgressDialog 
+        open={saveSegmentationsYOLOStatus === "running" || saveSegmentationsYOLOStatus === "success"}
+        onOpenChange={(open) => {
+          if (!open) saveSegmentationsYOLOReset()
+        }}
+        progress={saveSegmentationsYOLOProgress}
+        status={saveSegmentationsYOLOStatus}
+      />
     </div>
   )
 }
