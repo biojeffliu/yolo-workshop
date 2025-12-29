@@ -222,6 +222,8 @@ next-env.d.ts
 backend/app/uploads/**
 backend/app/segmentations/**
 
+backend/app/models/
+
 # Model files
 backend/checkpoints/**
 *.pt
