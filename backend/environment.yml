@@ -1,4 +1,4 @@
-name: sam2env
+name: yolo_workshop
 channels:
   - defaults
   - nvidia
