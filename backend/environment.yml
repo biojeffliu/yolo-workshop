@@ -171,4 +171,3 @@ dependencies:
       - uvicorn==0.38.0
       - uvloop==0.22.1
       - watchfiles==1.1.1
-prefix: /home/roar-msi2/miniconda3/envs/sam2env
