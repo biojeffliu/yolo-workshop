@@ -36,8 +36,8 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg">
-              <Link href="/" className="flex items-center group-data-[collapsible=icon]:justify-center">
+            <SidebarMenuButton tooltip="Home" size="lg" asChild>
+              <Link href="/" className="flex w-full items-center group-data-[collapsible=icon]:justify-center">
                 <img
                   src="/icon.ico"
                   alt="AI Racing Tech"
@@ -56,10 +56,10 @@ export function AppSidebar() {
             <SidebarMenu>
               {/* Dataset Tab */}
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === "/datasets"}>
+                <SidebarMenuButton tooltip="Datasets" asChild isActive={pathname === "/datasets"}>
                   <Link href="/datasets">
                     <Database />
-                    <span className="whitespace-nowrap">Datasets</span>
+                    <span className="whitespace-nowrap overflow-hidden">Datasets</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -68,9 +68,9 @@ export function AppSidebar() {
               <Collapsible open={isVideoPlayerOpen} onOpenChange={setIsVideoPlayerOpen} className="group/collapsible">
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton isActive={pathname.startsWith("/video-player")}>
+                    <SidebarMenuButton tooltip="Video Player" isActive={pathname.startsWith("/video-player")}>
                       <Play />
-                      <span>Video Player</span>
+                      <span className="whitespace-nowrap overflow-hidden">Video Player</span>
                       <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
@@ -121,10 +121,10 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               </Collapsible>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === "/models"}>
+                <SidebarMenuButton tooltip="Model Registry" asChild isActive={pathname === "/models"}>
                   <Link href="/models">
                     <Layers />
-                    <span className="whitespace-nowrap">Model Registry</span>
+                    <span className="whitespace-nowrap overflow-hidden">Model Registry</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
