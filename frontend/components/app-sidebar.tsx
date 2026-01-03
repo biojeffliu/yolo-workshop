@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronRight, Database, Folders, Home, Play } from "lucide-react"
+import { ChevronRight, Database, Folders, Home, Play, Layers } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useFetchFolders } from "@/hooks/use-backend"
@@ -120,6 +120,14 @@ export function AppSidebar() {
                 </CollapsibleContent>
                 </SidebarMenuItem>
               </Collapsible>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/models"}>
+                  <Link href="/models">
+                    <Layers />
+                    <span className="whitespace-nowrap">Model Registry</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
