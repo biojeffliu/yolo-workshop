@@ -3,44 +3,7 @@
 import * as React from "react"
 import { BACKEND_URL } from "@/lib/api"
 import { toast } from "sonner"
-
-export interface YOLOModelMetadata {
-  id: string
-  name: string
-  task: string
-  family: string
-  size: string | null
-  params_m: number
-  stride: number
-  source: string
-  pretrained: boolean
-  fine_tunable: boolean
-  best_checkpoint_id?: string
-  num_checkpoints?: number
-  created_at?: string
-}
-
-export interface YOLOModelDetail {
-  id: string
-  name: string
-  task: string
-  family: string
-  size: string | null
-  params_m: number
-  stride: number
-  source: string
-  pretrained: boolean
-  fine_tunable: boolean
-  datasets?: string[]
-  created_at?: string
-}
-
-export interface ModelCheckpoint {
-  id: string
-  label: string
-  epoch?: number
-  recommended?: boolean
-}
+import { YOLOModelDetail, YOLOModelMetadata, ModelCheckpoint } from "@/lib/model-types"
 
 export function useFetchModels() {
   const [models, setModels] = React.useState<YOLOModelMetadata[]>([])

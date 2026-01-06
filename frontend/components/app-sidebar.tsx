@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { ChevronRight, Database, Folders, Home, Play, Layers } from "lucide-react"
+import { ChevronRight, Database, Play, Layers, Sparkles } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useFetchFolders } from "@/hooks/use-backend"
 
@@ -38,7 +39,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton tooltip="Home" size="lg" asChild>
               <Link href="/" className="flex w-full items-center group-data-[collapsible=icon]:justify-center">
-                <img
+                <Image
                   src="/icon.ico"
                   alt="AI Racing Tech"
                   className="h-6 w-6"
@@ -125,6 +126,14 @@ export function AppSidebar() {
                   <Link href="/models">
                     <Layers />
                     <span className="whitespace-nowrap overflow-hidden">Model Registry</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Fine Tune" asChild isActive={pathname === "/finetune"}>
+                  <Link href="/finetune">
+                    <Sparkles />
+                    <span className="whitespace-nowrap overflow-hidden">Fine Tune</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
