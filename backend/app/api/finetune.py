@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from app.models.finetune import FineTuneRequest
 from app.services.model_service import ModelService
-# from app.jobs.enqueue import enqueue_finetune_job
-# from app.jobs.store import create_job
+from app.jobs.enqueue import enqueue_finetune_job
+from app.jobs.store import create_job
 
 router = APIRouter(prefix="/finetune", tags=["finetune"])
 svc = ModelService()

@@ -49,4 +49,5 @@ Frontend should now be running at: `http://localhost:3000`
 
 ## Model Fine-tuning Help
 
-
+## Sources
+[@ekberndt](https://www.github.com/ekberndt)'s [YOLOv8 Instance Segmentation Fine-Tuning](https://github.com/ekberndt/YOLOv8-Fine-Tune) helped me with the fine-tuning setion of this project.

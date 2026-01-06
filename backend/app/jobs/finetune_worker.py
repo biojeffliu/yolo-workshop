@@ -18,6 +18,7 @@ def run_finetune_job(job_id: str, payload: dict):
     svc = ModelService()
     job_dir = ML_MODELS_DIR / job_id
     job_dir.mkdir(parents=True, exist_ok=True)
+    cfg = payload["training_config"]
 
     try:
         mark_job_running(job_id)
@@ -33,16 +34,18 @@ def run_finetune_job(job_id: str, payload: dict):
             "checkpoint": checkpoint
         })
 
-        dataset_yaml = split_and_build_training_view(
+        dataset_yaml, dataset_report = split_and_build_training_view(
             dataset_id=payload["dataset_ids"][0],
             job_dir=job_dir,
             train_ratio=0.8,
             seed=payload.get("seed", 42)
         )
 
-        publish_event(job_id, "dataset_ready", {
-            "datasets": payload["dataset_ids"]
-        })
+        publish_event(job_id, "dataset_ready", dataset_report)
+
+        (job_dir / "dataset_report.json").write_text(
+            json.dumps(dataset_report, indent=2)
+        )
 
         yolo = YOLO(str(ckpt_path))
 

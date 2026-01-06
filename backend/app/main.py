@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import images, upload, finetune, folders, ml_models, segmentation, save
+from app.api import images, upload, finetune, folders, jobs, ml_models, segmentation, save
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response
 from app.utils.paths import UPLOADS_DIR
@@ -38,4 +38,5 @@ app.include_router(upload.router, prefix="/api")
 app.include_router(segmentation.router, prefix="/api")
 app.include_router(save.router, prefix="/api")
 app.include_router(ml_models.router, prefix="/api")
-# app.include_router(finetune.router, prefix="/api")
+app.include_router(finetune.router, prefix="/api")
+app.include_router(jobs.router, prefix="/api")

@@ -219,11 +219,13 @@ next-env.d.ts
 
 .vscode
 
-backend/app/uploads/**
-backend/app/segmentations/**
+backend/uploads/**
+backend/segmentations/**
 
-backend/app/ml_models/finetuned/**
-backend/app/ml_models/ultralytics/**
+backend/ml_models/finetuned/**
+backend/ml_models/ultralytics/**
+
+backend/jobs/**
 
 # Model files
 backend/checkpoints/**

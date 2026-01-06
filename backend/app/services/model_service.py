@@ -2,13 +2,12 @@ from pathlib import Path
 import json
 from typing import Dict, List
 from ultralytics import YOLO
-
-MODELS_DIR = Path("ml_models").resolve()
+from app.utils.paths import ML_MODELS_DIR
 
 class ModelService:
     def __init__(self):
-        self.ultralytics_dir = MODELS_DIR / "ultralytics"
-        self.finetuned_dir = MODELS_DIR / "finetuned"
+        self.ultralytics_dir = ML_MODELS_DIR / "ultralytics"
+        self.finetuned_dir = ML_MODELS_DIR / "finetuned"
 
     def list_models(self) -> List[Dict]:
         models = []
