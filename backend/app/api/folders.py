@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.utils.paths import UPLOADS_DIR
+from app.utils.paths import UPLOADS_DIR, SEGMENTATIONS_DIR
 from app.utils.validation import list_image_files, get_first_image_size
 from app.models.folders import RenameFolderRequest, FolderMetadata, UpdateDescriptionRequest
 import os
@@ -47,6 +47,17 @@ async def delete_folders(folder: str):
     except OSError as e:
         raise HTTPException(500, detail=f"Error deleting folder: {str(e)}")
     
+    seg_path = SEGMENTATIONS_DIR / folder
+    if seg_path.exists():
+        try:
+            shutil.rmtree(seg_path)
+            return {"message": f"Folder '{folder}' and segmentations deleted successfully"}
+        except OSError as e:
+            raise HTTPException(
+                500,
+                detail=f"Folder deleted but failed to delete segmentations: {str(e)}"
+            )
+    
     return {"message": f"Folder '{folder}' deleted successfully"}
 
 @router.put("/rename")
@@ -69,16 +80,50 @@ async def rename_folder(req: RenameFolderRequest):
     if UPLOADS_DIR.resolve() not in new_path.resolve().parents:
          raise HTTPException(403, detail="Invalid folder path")
     
+    old_seg = SEGMENTATIONS_DIR / old_name
+    new_seg = SEGMENTATIONS_DIR / new_name
+
     try:
         old_path.rename(new_path)
+
+        if old_seg.exists():
+            if new_seg.exists():
+                raise HTTPException(409, detail="Target segmentation folder already exists")
+            old_seg.rename(new_seg)
         try:
             meta = load_metadata(new_name)
             meta.name = new_name
             save_metadata(new_name, meta)
         except Exception as e:
             print(f"Warning: Failed to update metadata name: {e}")
-    except OSError as e:
-        raise HTTPException(500, detail=f"Error renaming folder: {str(e)}")
+
+        if new_seg.exists():
+            dataset_meta_path = new_seg / "dataset.json"
+            if dataset_meta_path.exists():
+                try:
+                    with open(dataset_meta_path, "r") as f:
+                        dataset_meta = json.load(f)
+                    dataset_meta["dataset_id"] = new_name
+                    with open(dataset_meta_path, "w") as f:
+                        json.dump(dataset_meta, f, indent=2)
+                except Exception as e:
+                    print(f"Warning: Failed to update dataset metadata: {e}")
+
+        
+    except Exception as e:
+        if new_path.exists() and not old_path.exists():
+            new_path.rename(old_path)
+
+        if new_seg.exists() and not old_seg.exists():
+            new_seg.rename(old_seg)
+
+        if isinstance(e, HTTPException):
+            raise e
+
+        raise HTTPException(
+            500,
+            detail=f"Error renaming folder: {str(e)}"
+        )
     
     return {"message": "Folder renamed successfully", "new_name": new_name}
 
