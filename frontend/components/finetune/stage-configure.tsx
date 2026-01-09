@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArrowRight, Database, Layers } from "lucide-react"
 import { useFetchModels, useFetchCheckpoints } from "@/hooks/use-fetch-models"
-// import { useFetchData }
+import { useSegmentationDatasets } from "@/hooks/use-fetch-datasets"
 import type { ModelCheckpoint, YOLOModelMetadata } from "@/lib/model-types"
 import type { FineTuneConfig, ModelSize } from "@/lib/finetune-types"
 
@@ -30,6 +30,7 @@ export function StageConfigure({
 }: StageConfigureProps) {
   const { models, isLoading: modelsLoading } = useFetchModels()
   const { checkpoints, isLoading: checkpointsLoading } = useFetchCheckpoints(config.base_model)
+  const { datasets, isLoading: datasetsLoading } = useSegmentationDatasets()
 
   const updateConfig = <K extends keyof FineTuneConfig>(key: K, value: FineTuneConfig[K]) => {
     onChange({ ...config, [key]: value })
@@ -39,18 +40,51 @@ export function StageConfigure({
     onChange({ ...config, augmentation: { ...config.augmentation, [key]: value } })
   }
 
-  const updateDatasetConfig = (key: string, value: any) => {
-    onChange({ ...config, dataset_config: { ...config.dataset_config, [key]: value } })
+  const updateDatasetConfig = <
+    K extends keyof FineTuneConfig["dataset_config"]
+  >(
+    key: K,
+    value: FineTuneConfig["dataset_config"][K]
+  ) => {
+    onChange({
+      ...config,
+      dataset_config: {
+        ...config.dataset_config,
+        [key]: value,
+      },
+    })
   }
 
-  const updateTuning = (key: string, value: any) => {
-    onChange({ ...config, tuning: { ...config.tuning, [key]: value } })
+  const updateTuning = <
+    K extends keyof FineTuneConfig["tuning"]
+  >(
+    key: K,
+    value: FineTuneConfig["tuning"][K]
+  ) => {
+    onChange({
+      ...config,
+      tuning: {
+        ...config.tuning,
+        [key]: value,
+      },
+    })
   }
 
-  const updateExport = (key: string, value: any) => {
-    onChange({ ...config, export: { ...config.export, [key]: value } })
+  const updateExport = <
+    K extends keyof FineTuneConfig["export"]
+  >(
+    key: K,
+    value: FineTuneConfig["export"][K]
+  ) => {
+    onChange({
+      ...config,
+      export: {
+        ...config.export,
+        [key]: value,
+      },
+    })
   }
-
+  
   const toggleDataset = (datasetId: string) => {
     const current = config.datasets
     if (current.includes(datasetId)) {
@@ -110,15 +144,28 @@ export function StageConfigure({
                 <Select
                   value={config.resume_checkpoint}
                   onValueChange={(v) => updateConfig("resume_checkpoint", v)}
-                  disabled={!selectedModel}
+                  disabled={!selectedModel || checkpoints.length === 0}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select checkpoint" />
                   </SelectTrigger>
                   <SelectContent>
-                    {selectedModel?.checkpoints.map((cp) => (
+                    {checkpoints.map((cp) => (
                       <SelectItem key={cp.id} value={cp.id}>
-                        {cp.name} {cp.mAP && `(mAP: ${cp.mAP})`}
+                        <div className="flex items-center justify-between gap-2 w-full">
+                          {/* Primary label */}
+                          <span>{cp.label}</span>
+
+                          {/* Secondary metadata */}
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {cp.epoch !== undefined && <span>Epoch {cp.epoch}</span>}
+                            {cp.recommended && (
+                              <Badge variant="secondary" className="ml-1">
+                                Recommended
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -166,7 +213,33 @@ export function StageConfigure({
         <CardContent>
           <ScrollArea className="h-[200px] pr-4">
             <div className="space-y-2">
-              {datasets.map((dataset) => (
+              {datasets.map((dataset) => {
+                const id = dataset.dataset_id
+                const frames = dataset.counts.frames_written
+
+                return (
+                  <div
+                    key={id}
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id={id}
+                        checked={config.datasets.includes(id)}
+                        onCheckedChange={() => toggleDataset(id)}
+                      />
+                      <label htmlFor={id} className="cursor-pointer">
+                        <p className="text-sm font-medium">{id}</p>
+                        <p className="text-xs text-muted-foreground">{frames} frames</p>
+                      </label>
+                    </div>
+                    {config.datasets.includes(id) && (
+                      <Badge variant="secondary">Selected</Badge>
+                    )}
+                  </div>
+                )
+              })}
+              {/* {datasets.map((dataset) => (
                 <div
                   key={dataset.id}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
@@ -184,7 +257,7 @@ export function StageConfigure({
                   </div>
                   {config.datasets.includes(dataset.id) && <Badge variant="secondary">Selected</Badge>}
                 </div>
-              ))}
+              ))} */}
             </div>
           </ScrollArea>
           {config.datasets.length > 0 && (

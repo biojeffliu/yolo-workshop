@@ -169,7 +169,7 @@ def run_yolo_export(folder: str, req: SaveSegmentationsYOLORequest, job_id: str)
         },
         "objects": [
             {
-                "object_id": obj_id,
+                "object_id": str(obj_id),
                 "class_id": obj_meta.get(obj_id, {}).get("class_id"),
                 "class_name": COCO_LABELS.get(obj_meta.get(obj_id, {}).get("class_id")),
                 "labels_written": count,

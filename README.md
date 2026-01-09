@@ -29,18 +29,23 @@ uvicorn app.main:app --reload --workers 1
 ```
 Backend should now be running at `http://localhost:8000`
 
-3. Install frontend dependencies via pnpm:
+3. (Optional, for fine-tune and inference) Install ultralytics models:
+```bash
+python3 install_ultralytics_models.py
+```
+
+4. Install frontend dependencies via pnpm:
 ```bash
 cd frontend
 pnpm install
 ```
-4. Configure environment variables, create a `.env.local` file in `frontend` if needed
+5. Configure environment variables, create a `.env.local` file in `frontend` if needed
 ```bash
 cat <<EOF > .env.local
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 EOF
 ```
-5. Start frontend dev server:
+6. Start frontend dev server:
 ```bash
 pnpm dev
 ```
@@ -56,6 +61,7 @@ uvicorn app.main:app --reload --workers 1
 ## Model Fine-tuning Help
 
 ## Known Limitations
+- Currently only 1 segmentation per dataset is allowed
 
 ## TODO
 - Support for pose models (figure out labeling service)

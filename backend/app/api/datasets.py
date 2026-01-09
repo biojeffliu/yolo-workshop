@@ -22,6 +22,9 @@ def list_datasets():
 
     return {"datasets": metadata_list}
 
+# Renaming datasets belongs to folders api
+# Current limitation only puts 1 segmentation folder per image
+
 def get_metadata_path(folder_name: str):
     return SEGMENTATIONS_DIR / folder_name / METADATA_FILENAME
 
