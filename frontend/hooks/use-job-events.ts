@@ -31,6 +31,15 @@ const normalizeEventsUrl = (eventsUrl: string) => {
   return `${BACKEND_URL}/api/${eventsUrl.replace(/^\/+/, "")}`
 }
 
+const parseEvent = (raw: string): SSEEvent | null => {
+  try {
+    return JSON.parse(raw) as SSEEvent
+  } catch (error) {
+    console.error("Failed to parse job event", error)
+    return null
+  }
+}
+
 export const useJobEvents = ({
   jobId,
   eventsUrl,

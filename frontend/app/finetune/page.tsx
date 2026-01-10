@@ -4,6 +4,8 @@ import * as React from "react"
 import { StageStepper } from "@/components/finetune/stage-stepper"
 import { StageConfigure } from "@/components/finetune/stage-configure"
 import { StageReview } from "@/components/finetune/stage-review"
+import { useFineTuneJob } from "@/hooks/use-finetune"
+import { StageProgress } from "@/components/finetune/stage-progress"
 import {
   FineTuneConfig,
   defaultAugmentationConfig,
@@ -22,7 +24,6 @@ const stages = [
 export default function FineTunePage() {
   const [currentStage, setCurrentStage] = React.useState(1)
   const [completedStages, setCompletedStages] = React.useState<number[]>([])
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [config, setConfig] = React.useState<FineTuneConfig>({
     base_model: "",
     checkpoint: "",
@@ -44,6 +45,13 @@ export default function FineTunePage() {
     data_dest_dir: "",
   })
 
+  const {
+    job: currentJob,
+    eventsUrl,
+    isSubmitting,
+    startFineTune,
+  } = useFineTuneJob()
+
 
   // Hooks
 
@@ -64,8 +72,16 @@ export default function FineTunePage() {
     }
   }
 
-  const handleStartJob = () => {
-
+  const handleStartJob = async () => {
+    try {
+      const job = await startFineTune(config)
+      if (job) {
+        setCompletedStages([1, 2])
+        setCurrentStage(3)
+      }
+    } catch (err) {
+      console.error("Failed to start fine-tune job", err)
+    }
   }
 
   return (
@@ -101,7 +117,11 @@ export default function FineTunePage() {
       )}
 
       {currentStage === 3 && currentJob && (
-        <StageProgress />
+        <StageProgress
+          job={currentJob}
+          eventsUrl={eventsUrl}
+          onCancel={() => {}}
+        />
       )}
     </div>
   )
