@@ -5,6 +5,9 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response
 from app.utils.paths import UPLOADS_DIR
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 app = FastAPI()
 

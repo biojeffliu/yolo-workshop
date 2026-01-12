@@ -1,7 +1,7 @@
 "use client"
 
-import DatasetDirectory from "@/components/dataset-directory"
-import ZipUploader from "@/components/upload-zip"
+import DatasetDirectory from "@/components/datasets/dataset-directory"
+import ZipUploader from "@/components/datasets/upload-zip"
 
 export default function DatasetPage(){
   return (

@@ -1,10 +1,11 @@
 import json
-import redis
 from datetime import datetime
 
-redis_client = redis.Redis(host="localhost", port=6379, decode_responses=True)
+from app.utils.redis import get_redis
 
 def publish_event(job_id: str, event: str, data: dict):
+    r = get_redis()
+
     payload = {
         "job_id": job_id,
         "event": event,
@@ -12,7 +13,7 @@ def publish_event(job_id: str, event: str, data: dict):
         "data": data,
     }
 
-    redis_client.publish(
+    r.publish(
         f"jobs:{job_id}",
         json.dumps(payload),
     )

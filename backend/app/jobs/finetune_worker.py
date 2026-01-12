@@ -34,9 +34,10 @@ def run_finetune_job(job_id: str, payload: dict):
             "base_model_id": base_model_id,
             "checkpoint": checkpoint
         })
+        print(payload)
 
         dataset_yaml, dataset_report = split_and_build_training_view(
-            dataset_id=payload["dataset_ids"],
+            dataset_ids=payload["dataset_ids"],
             job_dir=job_dir,
             train_ratio=cfg.dataset.train_percentage,
             seed=payload.get("seed", 42)

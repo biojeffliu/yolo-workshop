@@ -7,10 +7,9 @@ import json
 
 from app.jobs.store import load_job
 from app.utils.paths import JOBS_DIR
+from app.utils.redis import get_redis
 
 router = APIRouter(prefix="/jobs")
-
-redis_client = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
 @router.get("")
 def list_jobs():
@@ -32,7 +31,8 @@ def get_job(job_id: str):
 @router.get("/{job_id}/events")
 def stream_job_events(job_id: str):
     def event_stream():
-        pubsub = redis_client.pubsub()
+        r = get_redis()
+        pubsub = r.pubsub()
         pubsub.subscribe(f"jobs:{job_id}")
 
         try:

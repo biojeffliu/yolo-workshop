@@ -224,3 +224,6 @@ next-env.d.ts
 *.ckpt
 *.onnx
 *.engine
+
+# redis
+dump.rdb
