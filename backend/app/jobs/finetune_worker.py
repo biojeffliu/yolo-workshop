@@ -72,6 +72,7 @@ def run_finetune_job(job_id: str, payload: dict):
         yolo.train(
             data=str(dataset_yaml),
             epochs=cfg.epochs,
+            save_period=cfg.save_period,
             imgsz=cfg.img_size,
             batch=cfg.batch_size,
             lr0=cfg.learning_rate,

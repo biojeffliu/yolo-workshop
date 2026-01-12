@@ -40,6 +40,7 @@ class ExportConfig(BaseModel):
 
 class TrainingConfig(BaseModel):
     epochs: int = 100
+    save_period: int = 5
     num_train_loops: int = 1
     img_size: int = 1032
     layer_freeze: int = 0

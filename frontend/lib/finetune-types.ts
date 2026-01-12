@@ -50,6 +50,7 @@ export interface FineTuneConfig {
 
   // Training settings
   epochs: number
+  save_period: number
   num_train_loops: number
   img_size: number
   layer_freeze: number
@@ -209,6 +210,7 @@ export interface FineTuneRequest {
   dataset_ids: string[]
 
   epochs: number
+  save_period: number
   num_train_loops: number
   img_size: number
   layer_freeze: number

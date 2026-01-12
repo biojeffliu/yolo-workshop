@@ -32,6 +32,7 @@ export default function FineTunePage() {
     model_size: "s",
     datasets: [],
     epochs: 100,
+    save_period: 5,
     num_train_loops: 1,
     img_size: 640,
     layer_freeze: 0,

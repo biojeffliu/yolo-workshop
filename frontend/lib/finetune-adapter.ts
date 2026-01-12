@@ -12,6 +12,7 @@ export function toFineTuneRequest(
     dataset_ids: config.datasets,
 
     epochs: config.epochs,
+    save_period: config.save_period,
     num_train_loops: config.num_train_loops,
     img_size: config.img_size,
     layer_freeze: config.layer_freeze,

@@ -16,6 +16,7 @@ import { useFetchModels, useFetchCheckpoints } from "@/hooks/use-fetch-models"
 import { useSegmentationDatasets } from "@/hooks/use-fetch-datasets"
 import type { ModelCheckpoint, YOLOModelMetadata } from "@/lib/model-types"
 import type { FineTuneConfig, ModelSize } from "@/lib/finetune-types"
+import { InfoTooltip } from "../info-tooltip"
 
 
 interface StageConfigureProps {
@@ -130,9 +131,10 @@ export function StageConfigure({
       {/* Core Configuration */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-1">
             <Layers className="h-5 w-5" />
             Model Selection
+            <InfoTooltip text="Pretrained YOLO model architecture used as the starting point for fine-tuning." />
           </CardTitle>
           <CardDescription>Choose your base model and training mode</CardDescription>
         </CardHeader>
@@ -264,25 +266,6 @@ export function StageConfigure({
                   </div>
                 )
               })}
-              {/* {datasets.map((dataset) => (
-                <div
-                  key={dataset.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <Checkbox
-                      id={dataset.id}
-                      checked={config.datasets.includes(dataset.id)}
-                      onCheckedChange={() => toggleDataset(dataset.id)}
-                    />
-                    <label htmlFor={dataset.id} className="cursor-pointer">
-                      <p className="text-sm font-medium">{dataset.name}</p>
-                      <p className="text-xs text-muted-foreground">{dataset.frames} frames</p>
-                    </label>
-                  </div>
-                  {config.datasets.includes(dataset.id) && <Badge variant="secondary">Selected</Badge>}
-                </div>
-              ))} */}
             </div>
           </ScrollArea>
           {config.datasets.length > 0 && (
@@ -300,9 +283,9 @@ export function StageConfigure({
           <CardDescription>Configure training hyperparameters</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div className="space-y-2">
-              <Label htmlFor="epochs">Epochs</Label>
+              <Label htmlFor="epochs">Epochs<InfoTooltip text="Number of full passes over the training dataset." /></Label>
               <Input
                 id="epochs"
                 type="number"
@@ -312,7 +295,23 @@ export function StageConfigure({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="loops">Training Loops</Label>
+              <Label htmlFor="save_period">
+                Save Period
+                <InfoTooltip text="Save an intermediate model checkpoint every N epochs. Smaller values increase disk usage." />
+              </Label>
+              <Input
+                id="save_period"
+                type="number"
+                min={1}
+                value={config.save_period}
+                onChange={(e) => updateConfig("save_period", Number.parseInt(e.target.value) || 5)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="loops">
+                Training Loops
+                <InfoTooltip text="Number of times to repeat training over the dataset. Useful for small datasets." />
+              </Label>
               <Input
                 id="loops"
                 type="number"
@@ -322,7 +321,10 @@ export function StageConfigure({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="img_size">Image Size</Label>
+              <Label htmlFor="img_size">
+                Image Size
+                <InfoTooltip text="Resolution used during training. Larger sizes improve accuracy but increase memory usage." />
+              </Label>
               <Input
                 id="img_size"
                 type="number"
@@ -333,7 +335,10 @@ export function StageConfigure({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="freeze">Layers to Freeze</Label>
+              <Label htmlFor="freeze">
+                Layers to Freeze
+                <InfoTooltip text="Number of initial model layers to freeze. Freezing layers speeds up training and reduces overfitting." />
+              </Label>
               <Input
                 id="freeze"
                 type="number"
@@ -517,6 +522,7 @@ export function StageConfigure({
                 <div className="space-y-1.5">
                   <Label htmlFor="onnx_batch" className="text-xs">
                     Batch Size
+                    <InfoTooltip text="Number of images processed in parallel per training step. Limited by GPU memory." />
                   </Label>
                   <Input
                     id="onnx_batch"

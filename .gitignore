@@ -227,3 +227,5 @@ next-env.d.ts
 
 # redis
 dump.rdb
+
+backend/ml_models/job_**
