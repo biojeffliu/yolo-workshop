@@ -1,8 +1,9 @@
 # YOLO Workshop
 <p align="center">
-  <img src="gifs/label_example.gif" alt="SAM2 Labeling Demo" width="800">
+  <img src="media/label_example.gif" alt="SAM2 Labeling Demo" width="380">
+  <img src="media/fine_tuning_example.png" alt="Fine Tuning Demo" width="380">
   <br/>
-  <em>SAM2 Labeling on Video Example</em>
+  <em>SAM2 Labeling on Video Example (left) and YOLOv8 Fine-Tuning Example (right)</em>
 </p>
 
 SAM2 Video autolabeler, fine-tuning, and inference pipeline for YOLOv8-seg using ultralytics.

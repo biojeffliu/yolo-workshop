@@ -13,7 +13,7 @@ import type { FineTuneJob, TrainingMetrics, SSEEvent } from "@/lib/finetune-type
 import { useJobEvents, useJobStatus } from "@/hooks/use-job-events"
 
 interface StageProgressProps {
-  job: FineTuneJob
+  jobId: string
   eventsUrl?: string | null
   onCancel: () => void
 }
@@ -53,11 +53,10 @@ const getTrainingConfig = (job: FineTuneJob) => {
 }
 
 export function StageProgress({
-  job: initialJob,
+  jobId,
   eventsUrl,
   onCancel,
 }: StageProgressProps) {
-  const jobId = initialJob.id
   const { job } = useJobStatus(jobId)
   
   const scrollRef = React.useRef<HTMLDivElement>(null)
@@ -84,7 +83,24 @@ export function StageProgress({
   const latestEpoch = epochEvents.length > 0
     ? epochEvents[epochEvents.length - 1]
     : null
-  const trainingConfig = React.useMemo(() => getTrainingConfig(job), [job])
+  const trainingConfig = React.useMemo(
+    () => (job ? getTrainingConfig(job) : null),
+    [job]
+  )
+
+  const isConnected = status === "open"
+
+  if (!job) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Training Progress</CardTitle>
+          <CardDescription>Job ID: {jobId}</CardDescription>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">Loading job details...</CardContent>
+      </Card>
+    )
+  }
   const totalEpochs = trainingConfig?.epochs ?? 0
   const currentEpoch = latestEpoch?.data.epoch ?? 0
   const epochProgress = totalEpochs > 0 ? (currentEpoch / totalEpochs) * 100 : 0
@@ -93,8 +109,6 @@ export function StageProgress({
     epoch: event.data.epoch,
     metrics: event.data.metrics,
   }))
-
-  const isConnected = status === "open"
 
   return (
     <div className="space-y-6">

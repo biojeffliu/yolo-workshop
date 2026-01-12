@@ -51,12 +51,14 @@ const buildFineTunePayload = (config: FineTuneConfig) => {
 
 export function useFineTuneJob() {
   const [job, setJob] = React.useState<FineTuneJob | null>(null)
+  const [jobId, setJobId] = React.useState<string | null>(null)
   const [eventsUrl, setEventsUrl] = React.useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
   const reset = React.useCallback(() => {
     setJob(null)
+    setJobId(null)
     setEventsUrl(null)
     setError(null)
   }, [])
@@ -81,6 +83,7 @@ export function useFineTuneJob() {
       }
 
       const data = (await res.json()) as FineTuneResponse
+      setJobId(data.job_id)
       const jobRes = await fetch(`${BACKEND_URL}/api/jobs/${data.job_id}`)
 
       if (!jobRes.ok) {
@@ -102,6 +105,7 @@ export function useFineTuneJob() {
 
   return {
     job,
+    jobId,
     eventsUrl,
     isSubmitting,
     error,

@@ -48,6 +48,7 @@ export default function FineTunePage() {
 
   const {
     job: currentJob,
+    jobId,
     eventsUrl,
     isSubmitting,
     startFineTune,
@@ -117,9 +118,9 @@ export default function FineTunePage() {
         />
       )}
 
-      {currentStage === 3 && currentJob && (
+      {currentStage === 3 && jobId && (
         <StageProgress
-          job={currentJob}
+          jobId={jobId}
           eventsUrl={eventsUrl}
           onCancel={() => {}}
         />
