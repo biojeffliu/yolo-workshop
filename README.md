@@ -67,5 +67,11 @@ uvicorn app.main:app --reload --workers 1
 ## TODO
 - Support for pose models (figure out labeling service)
 
+## License
+MIT License
+
+## Notes
+This project provides training and deployment tooling. Users are responsible for ensuring model weights, datasets, and downstream deployments comply with applicable licenses and regulations.
+
 ## Sources
 [@ekberndt](https://www.github.com/ekberndt)'s [YOLOv8 Instance Segmentation Fine-Tuning](https://github.com/ekberndt/YOLOv8-Fine-Tune) helped me with the fine-tuning setion of this project.
