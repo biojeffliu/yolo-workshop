@@ -9,11 +9,15 @@ from app.jobs.store import (
     mark_job_running,
     mark_job_failed,
     mark_job_completed,
+    mark_job_cancelled,
     is_cancel_requested,
 )
 from app.models.finetune import TrainingConfig
 from app.jobs.dataset_splitter import split_and_build_training_view
 from app.utils.paths import ML_MODELS_DIR
+
+class JobCancelled(Exception):
+    pass
 
 def run_finetune_job(job_id: str, payload: dict):
     svc = ModelService()
@@ -56,8 +60,7 @@ def run_finetune_job(job_id: str, payload: dict):
         def on_train_epoch_end(trainer):
             if is_cancel_requested(job_id):
                 trainer.stop = True
-                publish_event(job_id, "cancelled", {})
-                raise RuntimeError("Job cancelled")
+                raise JobCancelled()
 
             metrics = trainer.metrics
             epoch = trainer.epoch
@@ -90,7 +93,10 @@ def run_finetune_job(job_id: str, payload: dict):
 
         mark_job_completed(job_id)
         publish_event(job_id, "completed", {})
-
+    except JobCancelled:
+        mark_job_cancelled(job_id)
+        publish_event(job_id, "cancelled", {})
+        return
     except Exception as e:
         mark_job_failed(job_id, str(e))
         publish_event(job_id, "failed", {"error": str(e)})

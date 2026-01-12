@@ -53,5 +53,12 @@ def mark_job_completed(job_id: str):
     job.updated_at = job.finished_at
     save_job(job)
 
+def mark_job_cancelled(job_id: str):
+    job = load_job(job_id)
+    job.status = JobStatus.CANCELLED
+    job.finished_at = datetime.now()
+    job.updated_at = job.finished_at
+    save_job(job)
+
 def is_cancel_requested(job_id: str) -> bool:
     return (JOBS_DIR / job_id / "cancel.flag").exists()

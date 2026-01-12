@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { BACKEND_URL } from "@/lib/api"
-import type { SSEEvent } from "@/lib/finetune-types"
+import type { FineTuneJob, SSEEvent } from "@/lib/finetune-types"
 
 export type JobEventConnectionStatus = "idle" | "connecting" | "open" | "closed" | "error"
 
@@ -38,6 +38,51 @@ const parseEvent = (raw: string): SSEEvent | null => {
     console.error("Failed to parse job event", error)
     return null
   }
+}
+
+export function useJobStatus(jobId?: string) {
+  const [job, setJob] = React.useState<FineTuneJob | null>(null)
+  const [error, setError] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    if (!jobId) {
+      setJob(null)
+      return
+    }
+
+    let cancelled = false
+
+    const fetchJob = async (): Promise<FineTuneJob> => {
+      const res = await fetch(`${BACKEND_URL}/api/jobs/${jobId}`)
+      if (!res.ok) {
+        throw new Error("Failed to fetch job")
+      }
+      return res.json()
+    }
+
+    const tick = async () => {
+      try {
+        const data = await fetchJob()
+        if (!cancelled) setJob(data)
+
+        if (["completed", "failed", "cancelled"].includes(data.status)) {
+          clearInterval(interval)
+        }
+      } catch (err) {
+        if (!cancelled) setError((err as Error).message)
+      }
+    }
+
+    tick()
+    const interval = setInterval(tick, 2000)
+
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [jobId])
+
+  return { job, error }
 }
 
 export const useJobEvents = ({

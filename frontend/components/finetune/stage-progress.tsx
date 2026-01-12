@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Wifi, WifiOff, XCircle, ArrowDown } from "lucide-react"
 import { JobStatusBadge } from "@/components/finetune/job-status-badge"
 import type { FineTuneJob, TrainingMetrics, SSEEvent } from "@/lib/finetune-types"
-import { useJobEvents } from "@/hooks/use-job-events"
+import { useJobEvents, useJobStatus } from "@/hooks/use-job-events"
 
 interface StageProgressProps {
   job: FineTuneJob
@@ -53,18 +53,22 @@ const getTrainingConfig = (job: FineTuneJob) => {
 }
 
 export function StageProgress({
-  job,
+  job: initialJob,
   eventsUrl,
   onCancel,
 }: StageProgressProps) {
+  const jobId = initialJob.id
+  const { job } = useJobStatus(jobId)
+  
   const scrollRef = React.useRef<HTMLDivElement>(null)
   const [autoScroll, setAutoScroll] = React.useState(true)
 
   const { events, status } = useJobEvents({
-    jobId: job.id,
+    jobId: jobId,
     eventsUrl,
-    enabled: Boolean(job.id)
+    enabled: true
   })
+  
 
   React.useEffect(() => {
     if (autoScroll && scrollRef.current) {
